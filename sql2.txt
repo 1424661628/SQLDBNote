@@ -1,0 +1,78 @@
+<3>管理数据库(DDL)
+<mysql>
+[创建数据库]
+create database 数据库名;
+后加 character set utf8 表示使用utf-8字符集
+后加 collate utf8_general_ci 表示带校对规则.
+[查看创建数据库的指令]
+show create database 数据库名;
+[显示所有数据库]
+show databases;
+[删除数据库]
+drop database 数据库名;
+[指定使用某个数据库]
+use 数据库名;
+[备份和恢复数据库]
+备份(dos下):mysqldump –u用户名 –p密码 备份数据库名 > 存放路径
+恢复(mysql控制台下):(1)创建新数据库(2)使用新数据库(3)source  路径/备份数据库名.sql
+恢复(dos下)：mysql -u用户名 -p密码 < 路径/备份数据库名.sql
+<SQL Server>
+[创建数据库]
+create database 数据库名;
+[删除数据库]
+drop database 数据库名;
+[指定使用某个数据库]
+use 数据库名;
+<Oracle>
+在Oracle中叫做方案,与用户名一致,在用户创建任意数据对象时由系统自动创建.
+说到创建,只有创建数据库实例.
+
+<4>管理表(DDL)
+[创建表] 多个字段之间用逗号隔开
+create table 表名(字段名 字段数据类型,字段名 字段数据类型);
+[删除表]
+drop table 表名;
+[修改表-添加新列]
+alter table 表名 add 字段名 字段数据类型
+[修改表-修改列类型和大小]
+mysql和Oracle: alter table 表名 modify 字段名 字段数据类型 ;
+SQL Server: alter table 表名 alter column 字段名 字段数据类型 ;
+[修改表-删除某列]
+alter table 表名 drop column 字段名 ;
+[Oracle]可以同时操作多个字段,括号中多个字段之间用逗号隔开: 
+alter table 表名 add/modify/drop(字段名 字段数据类型);
+[修改表-修改列名]
+mysql: alter table 表名 change 原字段名 新字段名 字段数据类型 ;
+SQL Server: exec sp_rename '表名称.原列名','新列名','column';
+Oracle: alter table 表名 rename column 原字段名 to 新字段名 ;
+[查看表结构]
+mysql和Oracle (需要在命令行窗口执行): desc  表名 ;
+SQL Server: sp_columns 表名 ;
+
+<5>管理表-增删改(DML)和查
+[增insert](后面values全部给出,列名可以不写)
+insert into 表名 (列名.....) values (值....);
+[删delete]
+delele from 表名 where 条件;
+删除表中全部数据,无法回滚:truncate table 表名; 
+[改update](可以同时set多个列名,用逗号隔开)
+update 表名 set 列名=表达式 where 条件;
+[事务mysql和Oracle]:mysql控制台是默认自动提交事务(dml),需要set autocommit=false;关闭.
+设置保存点: savepoint 保存点名称;
+回滚: rollback to 保存点名称;
+[事务SQL Server:]
+https://www.cnblogs.com/knowledgesea/p/3714417.html
+[查select(查询是DQL)]
+sql语言不区分大小写,mysql和SQL Server对查询内容也不区分大小写,
+但Oracle对查询内容区分大小写.
+select [distinct] *|{列名..} from table [where {条件}];
+其中distinct可选，表示剔除重复显示结果
+
+<6>数据类型
+参考<DataTypeMySQL><DataTypeOracle><DataTypeSQLServer>
+
+
+
+
+
+

@@ -1,0 +1,113 @@
+<1>登录数据库
+<mysql>
+(dos命令): mysql -u用户名 -p密码 （-p后面不要有空格）
+(软件): MySQL Workbench
+<SQL Server>
+(软件): SQL Server Management Studio
+<Oracle>
+(dos命令): sqlplus 
+(软件): PLSQL Developer 
+(浏览器): https://localhost:5500/em 
+
+<2>用户管理
+<mysql>
+[查看用户] SELECT * FROM mysql.user;
+[创建用户] CREATE USER  'username'@'host'  IDENTIFIED BY  'password';
+解释:username用户名 password用户密码 host登录主机(如果只允许本地登录填localhost,如果允许远程登录填%)
+[授权用户] GRANT privileges ON  databasename.tablename  TO  'username'@'host';
+解释:username和host意义同上.privileges权限,可以是select,insert,delete,update等,全部权限填ALL
+databasename.tablename表示哪个库的哪个表,如果是所有数据库的所有表填*.*
+如果想要这个用户能给其他用户授权,在最后面加上WITH GRANT OPTION
+[删除用户] DROP  USER 'username'@'host' ; 
+[更改用户密码] SET  PASSWORD  FOR  'username'@'host' = PASSWORD('new_password');
+如果是当前用户 SET  PASSWORD = PASSWORD('new_password');
+[撤权用户] REVOKE privileges ON  databasename.tablename  FROM  'username'@'host';
+解释:意义同GRANT,但是注意授权和撤权的databasename.tablename必须写法一致,
+也就是不能修改表的范围,只能改权限范围.
+
+<SQL Server>
+创建登录账户,创建数据库用户,完成登录账户和数据库用户的映射,更改权限,
+可以使用存储过程来完成,具体参考下面链接
+http://blog.csdn.net/u011672712/article/details/51628092
+
+<Oracle>
+[创建用户] 
+create user 用户名 identified by 密码 
+default tablespace users 
+temporary tablespace temp 
+quota 3m on users;
+解释:identified by表示用户将用数据库方式验证.
+default tablespace users表示用户的表空间在users上.
+temporary tablespace temp表示用户的临时表在temp上.
+quota 3m on users表示用户建立的数据对象最大是3M.
+[用户权限]
+当前用户可以授权给其他用户一些权限来操作自己的数据对象.(类似Linux中的用户权限)
+授权: grant 权限/角色 to 用户名;
+撤权: revoke 权限/角色 from 用户名;
+权限:分为系统权限和对象权限.
+系统权限:
+create session	(登录权限)
+create table	(创建表权限)
+create index	(创建索引权限)
+create view		(创建视图权限)
+create sequence	(创建序列权限)
+create trriger	(创建触发器权限)
+…………等等
+对象权限: insert	增 delete	删 update	改 select	查
+角色: 就是把一些权限集中起来,形成角色,可以自定义角色.
+系统预定义的角色有dba（管理员）、connect（只能登陆）、resource（建表没有空间限制）.
+对象权限和方案挂钩:
+[Oracle方案 类似于 mysql中的数据库,授权的时候Oracle是方案下的表,mysql是数据库下的表]
+[给某用户授权表的增删改查权限基本语法] grant [select|update|delete|insert|all] on 表名 to 用户名;
+[用户查询授权表的基本语法] select * from [方案名].表名;
+继续分配权限:授权时后面加with grant/admin option 表示得到权限的用户,可以把权限继续分配.
+admin 系统权限 grant 对象权限 ,这表示mysql授权只有对象权限,没有系统权限.
+
+[删除用户] drop user 用户名 [cascade];
+如果用户已经创建过数据对象,要加[cascade],表示连同数据对象一同删除.
+[Oracle删除用户同时保留用户的数据对象],是锁定该用户,而不是删除.
+alter user 用户名 account lock;
+[切换登录用户] connect 用户名/密码; 
+如果是特权用户要加as sysdba或as sysoper
+[显示当前用户]  show user
+[断开与数据库的连接] disc  
+[断开同时退出sqlplus] exit
+[修改密码] alter user 用户名 identified by 新密码;  (sys或system用户修改其它用户的方法)
+修改自己密码 password 用户名;
+
+<Oracle使用profile管理用户口令>
+(一)创建profile文件:
+create profile 文件名 limit 限制参数
+如下都是限制参数,加在上面命令的最后
+(1)账户锁定
+设定尝试密码输入几次在错误后锁定几天：
+failed_login_attempts 尝试输入次数 
+password_lock_time 锁定几天
+(2)终止口令
+设置每隔几天要对用户的密码进行修改，更改密码时间在几天内:
+password_life_time 几天后修改密码 
+password_grace_time 宽限期几天
+(3)口令历史
+password_reuse_time 口令在多少天内不能重复使用
+(二)分配profile文件给某个用户:
+alter user 用户名 profile 文件名;
+(三)删除profile文件:
+drop profile 文件名;
+注意：profile文件被删除后，原profile文件指定的用户将不再受原profile文件规则限定.
+(四)解锁用户
+alter user 用户名 account unlock;
+
+[oracle登录认证方式]
+windows下:
+对于普通用户,oracle默认使用数据库验证.
+对于特权用户(比如sys用户),oracle默认使用操作系统认证,如果验证不通过,再到数据库验证(密码文件验证).
+通过配置sqlnet.ora文件,可以修改oracle登录认证方式
+SQLNET.AUTHENTICATION_SERVICES=(NTS)是基于操作系统验证.
+SQLNET.AUTHENTICATION_SERVICES=(NONE)是基于oracle验证.
+SQLNET.AUTHENTICATION_SERVICES=(NONE,NTS)是二者共存.
+linux下:
+sqlnet.ora文件中
+SQLNET.AUTHENTICATION_SERVICES无参数为操作系统和oracle密码验证双重验证.
+SQLNET.AUTHENTICATION_SERVICES有NONE或NTS参数即为oracle密码验证.
+
+

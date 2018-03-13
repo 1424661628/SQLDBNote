@@ -1,0 +1,145 @@
+<16>sql语句的分类
+补充说明一下sql语句的分类：
+1、dml语言(数据操作语言) (需要考虑事务)
+2、ddl语言(数据定义语言)
+3、dql语言(数据查询语言)
+4、dcl语言(数据控制语言)
+
+dml语言数据操作语言主要有三种形式：
+1、插入：insert；
+2、更新：update；
+3、删除：delete；
+
+ddl语言数据定义语言用来创建数据库中的各种对象--表、视图、索引、同义词、聚簇等如：
+create table	//创建表
+create view	//创建视图
+create index	//创建索引
+create syn	//创建同义词
+create cluster	//创建簇
+
+dql语言数据查询语言基本结构是由select子句，from子句，where子句组成的查询块：
+select <字段名表> from <表或视图名> where <查询条件>;
+
+dcl语言数据控制语言用来授予或加收访问数据库的某种特权，并控制数据库操作事务发生的时间及效果，对数据库实行监视等。如：
+1、grant：授权。
+2、rollback [work] to [savepoint]：回退到某一点。
+回滚--rollback
+回滚命令使数据库姿态回到上次最后提交的状态。其格式为：SQL>rollback;
+3、commit [work]：提交。
+在数据库的插入、删除和修改操作时，只有当事务在提交到数据库时才算完成。在事务提交前，只有操作数据库的这个人才能有权看到所做的事情，别人只有最后提交完成后才可以看到。
+提交数据有三种类型：显式提交、隐式提交及自动提交。
+1、显式提交
+用commit命令直接完成的提交为显式提交。格式为：SQL>commit;
+2、隐式提交
+用sql命令间接完成的提交为隐式提交。命令是：
+alter,audit,comment,connect,create,disconnect,drop,exit,grant,noaudit,quit,revoke,rename。
+3、自动提交
+若把autocommit设置为on，则在插入、修改、删除语句执行后，系统将自动进行提交，这就是自动提交。格式为：SQL>set autocommit on;
+
+<17>java连接数据库
+jdbc-需要打开数据库监听服务
+odbc-无需打开数据库监听服务
+
+<18>事务隔离级别
+隔离级别						脏读	不可重复读	幻读
+读未提交(Read uncommitted)		 √			√		 √
+读已提交(Read committed)		 ×			√		 √     (oracle和SQL Server默认)
+可重复读(Repeatable read)		 ×			×		 √     (mysql默认)
+可串行化(Serializable)			 ×			×		 ×
+
+脏读(dirty read):当一个事务读取另一个事务尚未提交的修改时,产生脏读.(在oracle中没有脏读的问题)
+不可重复读(nonrepeatable read):同一查询在同一事务中多次进行,由于其他提交事务所做的"修改或删除",每次返回不同的结果集,此时产生非重复读.
+幻读(phantom read)：同一查询在同一事务中多次进行,由于其他提交事务所做的"插入"操作,每次返回不同的结果集,此时发生幻读.
+
+oracle提供了sql92标准中的read committed(读已提交)和serializable(可串行化),同时提供了非sql92标准的read-only(读一致性)
+read only是serializable的子集,它们都避免了不可重复读和幻读,区别是在read only中是只读,而在serializable中可以进行DML操作.
+
+<19>数据库的约束
+约束包括：
+not null(非空)、unique(唯一.可以为null)、
+primary key(主键.不能为null.一张表只有一个主键)、
+foreign key(外键.可以为null.指向主键)、check(检查条件)、
+default(如果不设置默认值,系统默认为NULL)
+
+先建主表,再建从表.先删从表,再删主表.
+
+oracle的主键所在列会自动创建索引.
+SQLServer的unique可以null,但只能有一个,mysql和oracle可以有多个null.
+
+<20>数据库的主键自增长
+[MySQL]  AUTO_INCREMENT 
+修改序列起始值:ALTER TABLE 表名 AUTO_INCREMENT=起始值
+[SQL Server]  IDENTITY 或者 IDENTITY(起始值,递增值)
+MySQL和SQL Server 默认起始值1,递增1.
+[Oracle]
+创建序列基本语法：(sequence对象由多个用户共享)
+create sequence 序列名称
+start with 开始数字
+increment by 增长数字
+minvalue 最小值
+maxvalue 最大值(没有最大值用nomaxvalue)
+cycle/nocycle
+nocache
+使用序列：
+insert into 表名 values(序列名.nextval,'abc');
+特别说明：
+1、nextval:关键字,表示从序列中取下一个值;
+2、sequence序列是需要配合number类型的列来使用;
+3、sequence序列是要在主键或unique列上使用的.
+
+<21>Oracle数据库的角色
+(1)显示角色信息(需要查询的用户名或角色名都要大写)
+1.使用system或sys登录可以显示所有角色
+select * from dba_roles;
+2.显示角色具有的系统权限
+select privilege,admin_option from role_sys_privs where role='大写角色名';
+3.显示角色具有的对象权限
+select * from dba_tab_privs where grantee='大写角色名';
+4.要查看角色有怎样的权限可以通过下列语句查看：
+select * from dba_sys_privs where grantee='大写角色名';
+5.显示用户具有的角色,及默认角色
+select granted_role,default_role from dba_role_privs where grantee='大写用户名';
+(2)
+connect角色具有：
+create session 创建连接权限
+resource角色具有：
+create trigger	创建触发器
+create sequence	创建序列
+create type		创建类型权限
+create procedure创建过程
+create cluster	创建集群
+create operator	创建运营商
+create indextype创建索引类型
+create table	创建表
+(resource角色隐含了unlimited tablespace系统权限)
+dba角色具有:
+所有的系统权限,及with admin option选项,
+默认的dba用户为sys和system他们可以将任何系统权限授予其它用户.
+但是要注意的是dba角色不具备sysdba和sysoper的特权(启动和关闭数据库)
+(3)自定义角色
+建立角色不验证基本语法： create role 角色名 not identified;
+建立角色需数据库验证基本语法：create role 角色名 identified by 口令;
+(4)角色授权
+当建立角色时,角色没有任何权限,需要授权.
+给角色授予权限和给用户授权没有太多区别,但是要注意,
+系统权限的unlimited tablespace和对象权限的with grant option选项是不能授予角色的.
+给角色授权基本语法：
+grant 对象权限 on 数据库对象 to 自定义角色名;
+(5)分配角色给某个用户
+一般分配角色是由DBA来完成的,如果要以其它用户身份分配角色,则要求用户必需具有grant any role的系统权限.
+通过角色名授权用户基本语法：
+grant 角色名 to 用户名 [with admin option];
+(6)删除角色
+一般是dba来执行,如用其它用户则要求该用户具有drop any role系统权限.
+删除角色基本语法：
+drop role 角色名;
+
+
+
+
+
+
+
+
+
+

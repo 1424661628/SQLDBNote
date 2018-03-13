@@ -1,0 +1,122 @@
+<7>表基本查询-where子句
+where子句中经常使用的运算符
+比较运算符:
+> < <= >= = != 
+between ... and ...
+in(...)
+like '张%' 或 like '张_'
+is null 或 is not null
+逻辑运算符:
+and  or  not 
+
+<8>表基本查询-order by子句
+order by子句用来将查询结果排序
+select 列名或表达式 from 表名 order by 按此字段排序 [asc/desc];
+升序:asc可写可不写
+降序:desc
+使用列的别名排序(别名需要用""):
+select 列名或算数表达式 "别名" from 表名 order by "别名" [asc/desc];
+
+<9>表的复杂查询-max,min,avg,sum,count函数
+max,min,avg,sum,count 用在上述"算数表达式"的位置
+注意:avg(字段名)不会统计null,如果考虑null可以用sum(字段名)/count(*)
+例子:显示工资最高的员工的名字,工作岗位
+select ename,job from emp where sal=(select max(sal) from emp);
+特别注意: select语句执行的顺序是 从右向左 执行,正好和书写的方式相反.
+
+<10>表的复杂查询-group by和having子句
+group by用于对查询的结果分组统计;
+having子句用于限制(过滤)分组显示结果.
+用法: "group by 字段名"  "having 条件"
+总结:以上关键字的顺序是group by/having/order by (分组/过滤显示/排序)
+
+<11>表的复杂查询-多表查询
+多表查询的条件个数至少是(表的个数-1),才能避免笛卡尔积.
+语法:select (1)表名或别名.字段名 from (2)表名(或表名 别名) where 条件(可以用别名.字段名).
+上述(1)(2)处 多个用逗号隔开.
+
+<12>表的复杂查询-自连接
+自连接分内连接和外连接,外连接又分为左连接,右连接和完全连接.(区别在于以谁为主)
+自连接:两张表同时满足条件才显示,实质就是我们之前理解的where写法,以下两种写法等价.
+inner写法:  select 表1.字段,表2.字段 from 表1,表2 where 表1.字段=表2.字段;
+where写法:  select 表1.字段,表2.字段 from 表1 inner join  表2 on 表1.字段=表2.字段;
+左连接:以左表为主,左表完全显示,右表查不到的显示null.
+右连接:以右表为主,右表完全显示,左表查不到的显示null.
+(左连接和右连接区别只是表的先后,谁在左和谁在右,可以互相转化)
+完全连接:相当于左连接和右连接取并集.查不到的都显示null.
+例子:
+--------------------------------------------------------
+  a表     id   name     b表     id   age   parent_id   
+           1   张3              1     23     1   
+           2   李四             2     34     2   
+           3   王武             3     34     4       
+  a.id同parent_id   存在关系   
+--------------------------------------------------------    
+  1） 内连接   
+  select   a.*,b.*   from   a   inner   join   b     on   a.id=b.parent_id       
+  显示结果是     
+  1   张3                   1     23     1   
+  2   李四                  2     34     2   
+
+  2）左连接   
+  select   a.*,b.*   from   a   left   join   b     on   a.id=b.parent_id       
+  显示结果是     
+  1   张3                   1     23     1   
+  2   李四                  2     34     2   
+  3   王武                  null   
+
+ 3） 右连接   
+  select   a.*,b.*   from   a   right   join   b     on   a.id=b.parent_id       
+  显示结果是     
+  1   张3                   1     23     1   
+  2   李四                  2     34     2   
+  3   null                  3     34     4   
+
+ 4） 完全连接   
+  select   a.*,b.*   from   a   full   join   b     on   a.id=b.parent_id   
+  显示结果是     
+  1   张3                  1     23     1   
+  2   李四                 2     34     2   
+  3   null               　3     34     4   
+  4   王武                 null
+
+
+<13>表的复杂查询-子查询
+[单列单行子查询(子查询返回一个结果)]
+select * from 表名 where 字段名=(select 字段名 from 表名 where 条件);
+[单列多行子查询(子查询返回多个结果)]
+select * from 表名 where 字段名 in (select distinct 字段名 from 表名 where 条件);
+多行子查询可以使用all和any操作符,类似于在子查询中使用max或min函数.和子查询结果的最值有关.
+[在from子句中使用子查询(子查询结果作为临时表,临时表要取别名)]
+select 返回字段 from 原表,(select 临时表字段 from 原表) 临时表别名 where 原表.字段和临时表别名.临时表字段比较 ;
+(Oracle特有)[多列子查询(括号相当于多个子查询结果and操作)]
+select * from 表名 where (字段名1,字段名2)=(select 字段名1,字段名2 from 表名 where 条件);
+(Oracle特有)[用查询结果创建新表]
+这个命令是一种快捷建表方法(主要用于数据库压力测试使用,新表和原表列名要一一对应)
+create table 新建表名 (列名..) as select 列名.. from 已有表名;
+(Oracle特有)[将查询结果作为插入数据(列名要一一对应)]
+insert into 表名 (列名..) select 列名.. from 表名;
+
+<14>表的复杂查询-合并查询(Oracle特有)
+合并多个select语句的结果可以使用集合操作符
+union取并集,union all取所有,intersect取交集,minus取差集
+使用方法:  子查询1  集合操作符  子查询2
+
+<15>表的复杂查询-分页查询
+[mysql数据库]
+select * from 表名 where 条件 limit 从第几条取,取几条;
+[sqlserver数据库]
+select top 再取几条 * from 表名 where 查询字段 not in (select top 排除前几条 查询字段 from 表名 where 条件);
+[Oracle数据库]
+select t2.* from (select t1.*,rownum rn from (select * from 表名) t1 
+where rownum<=取到多少条数据) t2 where rn>=从第几条数据开始取;
+特别说明: oracle分页查询是通过三层筛选法进行查询的,每一次都可以带where条件来对要查询的信息进行筛选.
+建议:针对不同情况分页查询,尽可能的在最内层(第一层)设置条件,包括多表分页;
+第二层设置最大取值范围;第三层从第几条数据开始取值.
+上面的这个sql分页查询模版是oracle数据库效率比较高的查询方法,在百万数据级别对数据进行查询都可以及时响应.
+oracle每张表都有rownum默认字段,默认情况下是不显示的,但是是一直存在的.
+
+
+
+
+
